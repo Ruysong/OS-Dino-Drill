@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="OS-Dino-Drill is a chapter-based operating systems study deck for OS Concepts exercises."
+    />
+    <title>OS-Dino-Drill</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">OS</span>
+          <div>
+            <h1>OS-Dino-Drill</h1>
+            <p>Chapter-focused operating systems recall practice</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <label class="control-group">
+            <span>Chapter</span>
+            <select id="chapterSelect" aria-label="Select chapter"></select>
+          </label>
+          <label class="control-group">
+            <span>Mode</span>
+            <select id="modeSelect" aria-label="Select study mode">
+              <option value="ordered">Ordered</option>
+              <option value="random">Random</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <section class="study-toolbar" aria-label="Study controls">
+        <div class="toolbar-left">
+          <label class="search-box">
+            <span class="visually-hidden">Search current chapter</span>
+            <input id="searchInput" type="search" placeholder="Search this chapter" />
+          </label>
+          <div class="segmented" role="group" aria-label="Filter cards">
+            <button class="segment active" data-filter="all" type="button">All</button>
+            <button class="segment" data-filter="starred" type="button">Starred</button>
+            <button class="segment" data-filter="again" type="button">Again</button>
+            <button class="segment" data-filter="unsure" type="button">Unsure</button>
+            <button class="segment" data-filter="known" type="button">Known</button>
+          </div>
+        </div>
+        <div id="progressSummary" class="progress-summary"></div>
+      </section>
+
+      <main class="study-layout">
+        <aside class="card-index" aria-label="Cards in current chapter">
+          <div class="index-header">
+            <h2>Cards</h2>
+            <button id="collapseListButton" class="ghost-button" type="button">Hide</button>
+          </div>
+          <div id="cardList" class="card-list"></div>
+        </aside>
+
+        <section class="drill-stage">
+          <article class="study-card question-card">
+            <div class="card-meta">
+              <span id="cardNumber" class="card-number"></span>
+              <button id="starButton" class="star-button" type="button" aria-label="Toggle starred">☆</button>
+            </div>
+            <h2 id="cardTitle"></h2>
+            <div id="questionContent" class="markdown-content"></div>
+            <div class="card-actions">
+              <button id="previousButton" class="secondary-button" type="button">← Previous</button>
+              <button id="showAnswerButton" class="primary-button" type="button">Show Answer</button>
+              <button id="nextButton" class="secondary-button" type="button">Next →</button>
+            </div>
+          </article>
+
+          <article id="answerCard" class="study-card answer-card is-hidden">
+            <div class="answer-header">
+              <div>
+                <span class="eyebrow">Explanation</span>
+                <h2>Answer Notes</h2>
+              </div>
+              <button id="hideAnswerButton" class="ghost-button" type="button">Hide</button>
+            </div>
+            <div id="answerContent" class="markdown-content"></div>
+            <div id="keywordList" class="keyword-list"></div>
+            <div class="recall-actions" aria-label="Recall status">
+              <button class="status-button" data-status="again" type="button">Again</button>
+              <button class="status-button" data-status="unsure" type="button">Unsure</button>
+              <button class="status-button" data-status="known" type="button">Known</button>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="shortcut-bar">
+        <span><kbd>Space</kbd> reveal / next</span>
+        <span><kbd>←</kbd><kbd>→</kbd> move</span>
+        <span><kbd>S</kbd> star</span>
+        <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> status</span>
+      </footer>
+    </div>
+
+    <script src="./src/app.js" type="module"></script>
+  </body>
+</html>

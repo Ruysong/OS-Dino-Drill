@@ -1,0 +1,17 @@
+{
+  "name": "os-dino-drill",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example-driven operating systems study deck based on OS Concepts exercises.",
+  "scripts": {
+    "build:data": "node scripts/build-data.js",
+    "serve": "npx serve ."
+  },
+  "keywords": [
+    "operating-systems",
+    "os-concepts",
+    "flashcards",
+    "study"
+  ],
+  "license": "MIT"
+}
