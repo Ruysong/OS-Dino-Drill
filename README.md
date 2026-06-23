@@ -18,10 +18,10 @@ Progress is stored locally in the browser, so the app can be deployed as a stati
 
 The app reads generated card data from `data/cards.json`.
 
-To rebuild it from the chapter Markdown files:
+To rebuild it from the master Markdown file:
 
 ```powershell
-node scripts/build-data.js "C:\path\to\os_concepts_level4_all"
+node scripts/build-data.js "C:\path\to\OS_Anki_Master_Final_Ch01_Ch21.md"
 ```
 
-If no path is passed, the script uses the local `source/os_concepts_level4_all` folder.
+If no path is passed, the script uses `source/OS_Anki_Master_Final_Ch01_Ch21.md`.

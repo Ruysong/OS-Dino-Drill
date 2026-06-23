@@ -345,6 +345,7 @@ function renderMarkdown(markdown) {
   const blocks = safe.split(/\n{2,}/).map((block) => {
     if (block.startsWith("@@CODE_BLOCK_")) return block;
     if (/^<h[23]>/.test(block)) return block;
+    if (isMarkdownTable(block)) return renderTable(block);
     if (/^- /m.test(block)) {
       const items = block
         .split("\n")
@@ -371,6 +372,46 @@ function renderMarkdown(markdown) {
       const language = block.language ? `<span>${escapeHtml(block.language)}</span>` : "";
       return `<figure class="code-block"><figcaption>${language}</figcaption><pre><code>${block.code}</code></pre></figure>`;
     });
+}
+
+function isMarkdownTable(block) {
+  const lines = block.split("\n").map((line) => line.trim());
+  return (
+    lines.length >= 2 &&
+    lines[0].startsWith("|") &&
+    lines[0].endsWith("|") &&
+    /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[1])
+  );
+}
+
+function renderTable(block) {
+  const rows = block
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((_, index) => index !== 1)
+    .map((line) =>
+      line
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((cell) => cell.trim()),
+    );
+
+  const [header, ...body] = rows;
+  const head = header.map((cell) => `<th>${cell}</th>`).join("");
+  const bodyRows = body
+    .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+    .join("");
+
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${head}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 function escapeHtml(value) {

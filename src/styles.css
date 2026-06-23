@@ -408,6 +408,40 @@ select {
   white-space: pre;
 }
 
+.table-wrap {
+  margin: 16px 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.table-wrap table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 0.92rem;
+}
+
+.table-wrap th,
+.table-wrap td {
+  border-bottom: 1px solid var(--line);
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.table-wrap th {
+  background: var(--surface-muted);
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+
 .card-actions,
 .recall-actions {
   display: flex;

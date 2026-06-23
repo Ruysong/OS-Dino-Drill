@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const defaultSource = path.join(process.cwd(), "source", "os_concepts_level4_all");
-const sourceDir = process.argv[2] ? path.resolve(process.argv[2]) : defaultSource;
+const defaultSource = path.join(process.cwd(), "source", "OS_Anki_Master_Final_Ch01_Ch21.md");
+const sourcePath = process.argv[2] ? path.resolve(process.argv[2]) : defaultSource;
 const outputDir = path.join(process.cwd(), "data");
 const outputFile = path.join(outputDir, "cards.json");
 
@@ -19,6 +19,20 @@ function readMarkdownFiles(dir) {
       file,
       text: fs.readFileSync(path.join(dir, file), "utf8").replace(/\r\n/g, "\n"),
     }));
+}
+
+function readSource(inputPath) {
+  const stats = fs.statSync(inputPath);
+  if (stats.isDirectory()) {
+    return readMarkdownFiles(inputPath);
+  }
+
+  return [
+    {
+      file: path.basename(inputPath),
+      text: fs.readFileSync(inputPath, "utf8").replace(/\r\n/g, "\n"),
+    },
+  ];
 }
 
 function extractKeywords(markdown) {
@@ -90,19 +104,115 @@ function parseChapter({ file, text }) {
   };
 }
 
+function parseAnkiMaster({ file, text }) {
+  const chapterHeadingPattern = /^# Chapter\s+(\d+)\s*[-:]\s+(.+)$/gm;
+  const chapterHeadings = Array.from(text.matchAll(chapterHeadingPattern));
+
+  return chapterHeadings.map((chapterHeading, chapterIndex) => {
+    const chapterNumber = Number(chapterHeading[1]);
+    const chapterTitle = chapterHeading[2].trim();
+    const chapterStart = chapterHeading.index + chapterHeading[0].length;
+    const chapterEnd = chapterHeadings[chapterIndex + 1]?.index ?? text.length;
+    const chapterBody = text.slice(chapterStart, chapterEnd);
+    const cardHeadingPattern = /^##\s+(?!Format\b)(.+)$/gm;
+    const cardHeadings = Array.from(chapterBody.matchAll(cardHeadingPattern));
+
+    const cards = cardHeadings
+      .map((cardHeading, cardIndex) => {
+        const start = cardHeading.index + cardHeading[0].length;
+        const end = cardHeadings[cardIndex + 1]?.index ?? chapterBody.length;
+        const rawBody = chapterBody.slice(start, end).trim();
+        const sections = extractSections(rawBody);
+        const question = sections.Question?.trim() || "";
+        const details = (sections["Problem Details"] || sections.Extra || "").trim();
+        const answer = sections.Answer?.trim() || "";
+        const source = sections.Source?.trim() || file;
+
+        if (!question || !answer) return null;
+
+        const headingText = cardHeading[1].trim();
+        const normalizedHeading = headingText.replace(/^Card\s+\d+:\s*/i, "").trim();
+        const number =
+          normalizedHeading.match(/^(\d+\.\d+(?:\([a-z]\))?)/i)?.[1] ||
+          question.match(/^(\d+\.\d+(?:\([a-z]\))?)/i)?.[1] ||
+          `${chapterNumber}.${cardIndex + 1}`;
+        const titleFromHeading = normalizedHeading.replace(/^(\d+\.\d+(?:\([a-z]\))?)[:\s-]*/, "").trim();
+        const title = titleFromHeading || firstLine(question);
+        const questionWithDetails = details
+          ? `${question}\n\n**Problem Details**\n\n${details}`
+          : question;
+
+        return {
+          id: `ch${String(chapterNumber).padStart(2, "0")}-${slugify(number)}-${cardIndex + 1}`,
+          chapterNumber,
+          number,
+          title,
+          question: questionWithDetails,
+          answer,
+          keywords: [],
+          source,
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      id: `ch${String(chapterNumber).padStart(2, "0")}`,
+      number: chapterNumber,
+      title: chapterTitle,
+      sourceFile: file,
+      cards,
+    };
+  });
+}
+
+function extractSections(markdown) {
+  const sectionPattern = /^###\s+(.+)$/gm;
+  const headings = Array.from(markdown.matchAll(sectionPattern));
+  const sections = {};
+
+  headings.forEach((heading, index) => {
+    const name = heading[1].trim();
+    const start = heading.index + heading[0].length;
+    const end = headings[index + 1]?.index ?? markdown.length;
+    sections[name] = markdown.slice(start, end).trim().replace(/\n---\s*$/m, "").trim();
+  });
+
+  return sections;
+}
+
+function firstLine(markdown) {
+  return markdown
+    .split("\n")
+    .map((line) => line.trim())
+    .find(Boolean)
+    ?.replace(/^#+\s*/, "")
+    .slice(0, 120) || "Untitled card";
+}
+
+function slugify(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function main() {
-  if (!fs.existsSync(sourceDir)) {
-    throw new Error(`Source directory not found: ${sourceDir}`);
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`Source not found: ${sourcePath}`);
   }
 
-  const chapters = readMarkdownFiles(sourceDir).map(parseChapter);
+  const sources = readSource(sourcePath);
+  const chapters = sources.length === 1 && /^OS_Anki_Master_Final/i.test(sources[0].file)
+    ? parseAnkiMaster(sources[0])
+    : sources.map(parseChapter);
+
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(
     outputFile,
     `${JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        sourceDir,
+        source: sourcePath,
         chapters,
       },
       null,
