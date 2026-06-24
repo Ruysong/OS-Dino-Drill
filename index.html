@@ -5,104 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="OS-Dino-Drill is a chapter-based operating systems study deck for OS Concepts exercises."
+      content="OS-Dino-Drill: chapter-based multiple-choice practice for Operating System Concepts."
     />
-    <title>OS-Dino-Drill</title>
-    <link rel="stylesheet" href="./src/styles.css" />
+    <title>OS-Dino-Drill Quiz</title>
+    <link rel="stylesheet" href="./src/quiz.css" />
   </head>
   <body>
     <div id="app" class="app-shell">
       <header class="topbar">
-        <div class="brand">
+        <a class="brand" href="./" aria-label="OS-Dino-Drill quiz home">
           <span class="brand-mark">OS</span>
-          <div>
-            <h1>OS-Dino-Drill</h1>
-            <p>Chapter-focused operating systems recall practice</p>
-          </div>
-        </div>
-        <div class="top-actions">
-          <label class="control-group">
-            <span>Chapter</span>
-            <select id="chapterSelect" aria-label="Select chapter"></select>
-          </label>
-          <label class="control-group">
-            <span>Mode</span>
-            <select id="modeSelect" aria-label="Select study mode">
-              <option value="ordered">Ordered</option>
-              <option value="random">Random</option>
-            </select>
-          </label>
-        </div>
+          <span>
+            <strong>OS-Dino-Drill</strong>
+            <small>Multiple-choice practice</small>
+          </span>
+        </a>
+        <nav class="site-nav" aria-label="Study mode">
+          <a class="active" href="./">객관식</a>
+          <a href="./cards/">서술형 카드</a>
+        </nav>
       </header>
 
-      <section class="study-toolbar" aria-label="Study controls">
-        <div class="toolbar-left">
-          <label class="search-box">
-            <span class="visually-hidden">Search current chapter</span>
-            <input id="searchInput" type="search" placeholder="Search this chapter" />
-          </label>
-          <div class="segmented" role="group" aria-label="Filter cards">
-            <button class="segment active" data-filter="all" type="button">All</button>
-            <button class="segment" data-filter="starred" type="button">Starred</button>
-            <button class="segment" data-filter="again" type="button">Again</button>
-            <button class="segment" data-filter="unsure" type="button">Unsure</button>
-            <button class="segment" data-filter="known" type="button">Known</button>
-          </div>
-        </div>
-        <div id="progressSummary" class="progress-summary"></div>
+      <section class="controlbar" aria-label="Quiz controls">
+        <label>
+          <span>Chapter</span>
+          <select id="chapterSelect"></select>
+        </label>
+        <label>
+          <span>Order</span>
+          <select id="orderSelect">
+            <option value="ordered">순서대로</option>
+            <option value="random">무작위</option>
+            <option value="wrong-first">오답 우선</option>
+          </select>
+        </label>
+        <label>
+          <span>Type</span>
+          <select id="typeSelect">
+            <option value="all">전체 유형</option>
+            <option value="concept">개념형</option>
+            <option value="code">코드형</option>
+          </select>
+        </label>
+        <label class="search-control">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="현재 챕터 검색" />
+        </label>
+        <div id="chapterProgress" class="chapter-progress"></div>
       </section>
 
+      <div class="filterbar">
+        <div class="filter-tabs" role="group" aria-label="Question filter">
+          <button class="active" data-filter="all" type="button">전체</button>
+          <button data-filter="unanswered" type="button">미풀이</button>
+          <button data-filter="wrong" type="button">오답</button>
+          <button data-filter="starred" type="button">별표</button>
+        </div>
+        <button id="openIndexButton" class="mobile-index-button" type="button">문제 목록</button>
+      </div>
+
       <main class="study-layout">
-        <aside class="card-index" aria-label="Cards in current chapter">
-          <div class="index-header">
-            <h2>Cards</h2>
-            <button id="collapseListButton" class="ghost-button" type="button">Hide</button>
+        <aside id="questionIndex" class="question-index" aria-label="Current chapter questions">
+          <div class="index-heading">
+            <div>
+              <strong>문제 목록</strong>
+              <span id="visibleCount"></span>
+            </div>
+            <button id="closeIndexButton" class="icon-button" type="button" aria-label="목록 닫기">×</button>
           </div>
-          <div id="cardList" class="card-list"></div>
+          <div id="topicList" class="topic-list"></div>
         </aside>
 
-        <section class="drill-stage">
-          <article class="study-card question-card">
-            <div class="card-meta">
-              <span id="cardNumber" class="card-number"></span>
-              <button id="starButton" class="star-button" type="button" aria-label="Toggle starred">☆</button>
-            </div>
-            <h2 id="cardTitle"></h2>
-            <div id="questionContent" class="markdown-content"></div>
-            <div class="card-actions">
-              <button id="previousButton" class="secondary-button" type="button">← Previous</button>
-              <button id="showAnswerButton" class="primary-button" type="button">Show Answer</button>
-              <button id="nextButton" class="secondary-button" type="button">Next →</button>
-            </div>
-          </article>
+        <section id="quizStage" class="quiz-stage">
+          <div id="emptyState" class="empty-state" hidden>
+            <h1>표시할 문제가 없습니다</h1>
+            <p>필터나 검색어를 바꿔보세요.</p>
+          </div>
 
-          <article id="answerCard" class="study-card answer-card is-hidden">
-            <div class="answer-header">
+          <article id="questionView" class="question-view">
+            <div class="question-meta">
               <div>
-                <span class="eyebrow">Explanation</span>
-                <h2>Answer Notes</h2>
+                <span id="questionPosition"></span>
+                <span id="questionType" class="type-badge"></span>
+                <span id="difficultyBadge" class="difficulty"></span>
               </div>
-              <button id="hideAnswerButton" class="ghost-button" type="button">Hide</button>
+              <button id="starButton" class="star-button" type="button" aria-label="별표">☆</button>
             </div>
-            <div id="answerContent" class="markdown-content"></div>
-            <div id="keywordList" class="keyword-list"></div>
-            <div class="recall-actions" aria-label="Recall status">
-              <button class="status-button" data-status="again" type="button">Again</button>
-              <button class="status-button" data-status="unsure" type="button">Unsure</button>
-              <button class="status-button" data-status="known" type="button">Known</button>
+
+            <div class="topic-row">
+              <div>
+                <span>Current section</span>
+                <h1 id="topicTitle"></h1>
+              </div>
+              <div class="topic-status" aria-label="단원 상태">
+                <button data-topic-status="review" type="button">복습 필요</button>
+                <button data-topic-status="done" type="button">학습 완료</button>
+                <button data-topic-status="" type="button">초기화</button>
+              </div>
             </div>
+
+            <div id="promptContent" class="markdown-content prompt-content"></div>
+            <div id="choiceList" class="choice-list"></div>
+
+            <div class="answer-controls">
+              <button id="previousButton" class="secondary-button" type="button">이전</button>
+              <button id="submitButton" class="primary-button" type="button" disabled>정답 확인</button>
+              <button id="nextButton" class="secondary-button" type="button">다음</button>
+            </div>
+
+            <section id="explanationPanel" class="explanation-panel" hidden>
+              <div id="resultBanner" class="result-banner"></div>
+              <div class="explanation-block selected-explanation">
+                <span class="eyebrow">선택한 답 해설</span>
+                <div id="selectedExplanation" class="markdown-content"></div>
+              </div>
+              <div id="correctExplanationBlock" class="explanation-block">
+                <span class="eyebrow">정답 해설</span>
+                <div id="correctExplanation" class="markdown-content"></div>
+              </div>
+              <details class="other-explanations">
+                <summary>다른 선지 해설 보기</summary>
+                <div id="otherExplanations"></div>
+              </details>
+              <div id="summaryNote" class="summary-note"></div>
+              <div class="mastery-actions">
+                <span>이 문제를 어떻게 기억하고 있나요?</span>
+                <div>
+                  <button data-mastery="review" type="button">모름</button>
+                  <button data-mastery="unsure" type="button">애매함</button>
+                  <button data-mastery="known" type="button">알고 있음</button>
+                </div>
+              </div>
+            </section>
           </article>
         </section>
       </main>
 
       <footer class="shortcut-bar">
-        <span><kbd>Space</kbd> reveal / next</span>
-        <span><kbd>←</kbd><kbd>→</kbd> move</span>
-        <span><kbd>S</kbd> star</span>
-        <span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> status</span>
+        <span><kbd>1</kbd>~<kbd>4</kbd> 선택</span>
+        <span><kbd>Enter</kbd> 확인</span>
+        <span><kbd>←</kbd><kbd>→</kbd> 이동</span>
+        <span><kbd>S</kbd> 별표</span>
       </footer>
+      <div id="indexBackdrop" class="index-backdrop"></div>
     </div>
-
-    <script src="./src/app.js" type="module"></script>
+    <script src="./src/quiz.js" type="module"></script>
   </body>
 </html>

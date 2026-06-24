@@ -1,6 +1,26 @@
 # OS-Dino-Drill
 
-Example-driven operating systems study deck based on OS Concepts exercises.
+A chapter-based operating systems study app with multiple-choice quizzes and
+example-driven recall cards.
+
+## Study modes
+
+- `/` — 696 multiple-choice questions across Chapters 1–21
+- `/cards/` — the original long-form recall cards
+
+Quiz progress, shuffled choice order, stars, and manual mastery states are kept
+in the browser with `localStorage`, so the static site can be deployed directly
+to Vercel.
+
+## Rebuild quiz data
+
+```powershell
+node scripts/build-quiz-data.js "C:\path\to\OS_Quiz_Master_Ch01-Ch21_객관식합본.md"
+```
+
+The parser supports both Korean and English section labels. Each answer choice
+is stored with its own explanation, allowing the UI to shuffle choices without
+breaking grading or explanation mapping.
 Built for structured recall, explanation practice, and flashcard-style mastery of core OS principles.
 
 ## Study Flow

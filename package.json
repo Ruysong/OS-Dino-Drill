@@ -5,6 +5,7 @@
   "description": "Example-driven operating systems study deck based on OS Concepts exercises.",
   "scripts": {
     "build:data": "node scripts/build-data.js",
+    "build:quiz": "node scripts/build-quiz-data.js",
     "serve": "npx serve ."
   },
   "keywords": [

@@ -35,7 +35,7 @@ const elements = {
 
 async function initialize() {
   try {
-    const response = await fetch("./data/cards.json");
+    const response = await fetch("../data/cards.json");
     if (!response.ok) throw new Error(`Failed to load data: ${response.status}`);
     const data = await response.json();
     state.chapters = data.chapters || [];
