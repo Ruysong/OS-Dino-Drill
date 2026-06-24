@@ -40,6 +40,7 @@ const elements = Object.fromEntries(
     "previousButton",
     "submitButton",
     "nextButton",
+    "explanationPlaceholder",
     "explanationPanel",
     "resultBanner",
     "selectedExplanation",
@@ -234,6 +235,7 @@ function renderQuestion() {
 
   elements.submitButton.disabled = !state.selectedChoiceId || state.submitted;
   elements.submitButton.textContent = state.submitted ? "채점 완료" : "정답 확인";
+  elements.explanationPlaceholder.hidden = state.submitted;
   elements.explanationPanel.hidden = !state.submitted;
   document.querySelectorAll("[data-topic-status]").forEach((button) => {
     button.classList.toggle("active", button.dataset.topicStatus === getTopicStatus(question.topic));
@@ -301,9 +303,8 @@ function submitAnswer() {
   progress.lastChoiceId = state.selectedChoiceId;
   saveProgress();
   render();
-  requestAnimationFrame(() => {
-    elements.explanationPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
+  const answerPane = document.querySelector(".answer-pane");
+  if (answerPane) answerPane.scrollTop = 0;
 }
 
 function moveQuestion(direction) {
