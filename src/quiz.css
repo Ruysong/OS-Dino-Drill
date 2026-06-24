@@ -559,13 +559,41 @@ pre code {
 }
 
 .choice.correct {
-  border-color: #79a487;
-  background: var(--green-soft);
+  border: 2px solid #176b38;
+  background: #ccebd5;
+  color: #0b4824;
+  box-shadow: 0 0 0 3px rgba(23, 107, 56, 0.13);
 }
 
 .choice.wrong {
-  border-color: #ca8e88;
-  background: var(--red-soft);
+  border: 2px solid #b52f28;
+  background: #f5cfcb;
+  color: #771d19;
+  box-shadow: 0 0 0 3px rgba(181, 47, 40, 0.11);
+}
+
+.choice.correct .choice-symbol,
+.choice.wrong .choice-symbol {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  margin-top: -2px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.choice.correct .choice-symbol {
+  background: #176b38;
+}
+
+.choice.wrong .choice-symbol {
+  background: #b52f28;
+}
+
+.choice.correct .choice-text,
+.choice.wrong .choice-text {
+  font-weight: 750;
 }
 
 .choice-symbol {
@@ -626,13 +654,20 @@ pre code {
 }
 
 .result-banner.correct {
-  background: var(--green-soft);
-  color: var(--green);
+  border: 2px solid #176b38;
+  background: #ccebd5;
+  color: #0b4824;
 }
 
 .result-banner.wrong {
-  background: var(--red-soft);
-  color: var(--red);
+  border: 2px solid #b52f28;
+  background: #f5cfcb;
+  color: #771d19;
+}
+
+.result-banner strong {
+  font-size: 1rem;
+  font-weight: 850;
 }
 
 .result-banner span {

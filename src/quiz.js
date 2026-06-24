@@ -119,7 +119,8 @@ function bindEvents() {
   elements.openIndexButton.addEventListener("click", () => toggleIndex(true));
   elements.closeIndexButton.addEventListener("click", () => toggleIndex(false));
   elements.indexBackdrop.addEventListener("click", () => toggleIndex(false));
-  window.addEventListener("keydown", handleKeyboard);
+  window.addEventListener("keydown", handleKeyboard, { capture: true });
+  document.addEventListener("pointerup", clearPointerFocus);
 }
 
 function render() {
@@ -363,18 +364,49 @@ function setTopicStatus(status) {
 }
 
 function handleKeyboard(event) {
-  if (["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (isTypingTarget(event.target)) return;
+
+  const handledKeys = [" ", "Spacebar", "Enter", "ArrowLeft", "ArrowRight"];
+  if (handledKeys.includes(event.key) || /^[1-4]$/.test(event.key) || event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   if (/^[1-4]$/.test(event.key) && !state.submitted) {
     const choice = orderedChoices(currentQuestion())[Number(event.key) - 1];
     if (choice) chooseAnswer(choice.id);
+    return;
   }
-  if (event.key === "Enter") {
-    event.preventDefault();
-    submitAnswer();
+
+  if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
+    if (state.submitted) moveQuestion(1);
+    else submitAnswer();
+    return;
   }
-  if (event.key === "ArrowLeft") moveQuestion(-1);
-  if (event.key === "ArrowRight") moveQuestion(1);
+
+  if (event.key === "ArrowLeft") {
+    moveQuestion(-1);
+    return;
+  }
+  if (event.key === "ArrowRight") {
+    moveQuestion(1);
+    return;
+  }
   if (event.key.toLowerCase() === "s") toggleStar();
+}
+
+function isTypingTarget(target) {
+  return target instanceof HTMLElement &&
+    (["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName) || target.isContentEditable);
+}
+
+function clearPointerFocus(event) {
+  if (event.pointerType !== "mouse") return;
+  const target = event.target;
+  if (target instanceof HTMLButtonElement && document.activeElement === target) {
+    target.blur();
+  }
 }
 
 function filteredQuestions() {
