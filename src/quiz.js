@@ -46,6 +46,7 @@ const elements = Object.fromEntries(
     "selectedExplanation",
     "correctExplanationBlock",
     "correctExplanation",
+    "otherExplanationsDetails",
     "otherExplanations",
     "summaryNote",
   ].map((id) => [id, document.querySelector(`#${id}`)]),
@@ -369,7 +370,11 @@ function handleKeyboard(event) {
   if (isTypingTarget(event.target)) return;
 
   const handledKeys = [" ", "Spacebar", "Enter", "ArrowLeft", "ArrowRight"];
-  if (handledKeys.includes(event.key) || /^[1-4]$/.test(event.key) || event.key.toLowerCase() === "s") {
+  if (
+    handledKeys.includes(event.key) ||
+    /^[1-4]$/.test(event.key) ||
+    ["o", "s"].includes(event.key.toLowerCase())
+  ) {
     event.preventDefault();
     event.stopPropagation();
   }
@@ -392,6 +397,10 @@ function handleKeyboard(event) {
   }
   if (event.key === "ArrowRight") {
     moveQuestion(1);
+    return;
+  }
+  if (event.key.toLowerCase() === "o") {
+    if (state.submitted) elements.otherExplanationsDetails.open = !elements.otherExplanationsDetails.open;
     return;
   }
   if (event.key.toLowerCase() === "s") toggleStar();
