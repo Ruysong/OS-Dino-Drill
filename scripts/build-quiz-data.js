@@ -25,7 +25,10 @@ function clean(value) {
 }
 
 function stripQuote(value) {
-  return clean(value).replace(/^["“]|["”]$/g, "").trim();
+  return clean(value)
+    .replace(/\n+(?=#{2,3}\s+)[\s\S]*$/g, "")
+    .replace(/^["“”]|["“”]$/g, "")
+    .trim();
 }
 
 function parseSections(block) {
