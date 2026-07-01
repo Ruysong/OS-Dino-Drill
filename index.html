@@ -12,60 +12,59 @@
   </head>
   <body>
     <div id="app" class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="OS-Dino-Drill quiz home">
-          <span class="brand-mark">OS</span>
-          <span>
-            <strong>OS-Dino-Drill</strong>
-            <small>Multiple-choice practice</small>
-          </span>
-        </a>
-        <nav class="site-nav" aria-label="Study mode">
-          <a class="active" href="./">객관식</a>
-          <a href="./cards/">서술형 카드</a>
-        </nav>
-      </header>
-
-      <section class="controlbar" aria-label="Quiz controls">
-        <label>
-          <span>Chapter</span>
-          <select id="chapterSelect"></select>
-        </label>
-        <label>
-          <span>Order</span>
-          <select id="orderSelect">
-            <option value="ordered">순서대로</option>
-            <option value="random">무작위</option>
-            <option value="wrong-first">오답 우선</option>
-          </select>
-        </label>
-        <label>
-          <span>Type</span>
-          <select id="typeSelect">
-            <option value="all">전체 유형</option>
-            <option value="concept">개념형</option>
-            <option value="code">코드형</option>
-          </select>
-        </label>
-        <label class="search-control">
-          <span>Search</span>
-          <input id="searchInput" type="search" placeholder="현재 챕터 검색" />
-        </label>
-        <div id="chapterProgress" class="chapter-progress"></div>
-      </section>
-
-      <div class="filterbar">
-        <div class="filter-tabs" role="group" aria-label="Question filter">
-          <button class="active" data-filter="all" type="button">전체</button>
-          <button data-filter="unanswered" type="button">미풀이</button>
-          <button data-filter="wrong" type="button">오답</button>
-          <button data-filter="starred" type="button">별표</button>
-        </div>
-        <button id="openIndexButton" class="mobile-index-button" type="button">문제 목록</button>
-      </div>
-
       <main class="study-layout">
         <aside id="questionIndex" class="question-index" aria-label="Current chapter questions">
+          <header class="topbar">
+            <a class="brand" href="./" aria-label="OS-Dino-Drill quiz home">
+              <span class="brand-mark">OS</span>
+              <span>
+                <strong>OS-Dino-Drill</strong>
+                <small>Multiple-choice practice</small>
+              </span>
+            </a>
+            <nav class="site-nav" aria-label="Study mode">
+              <a class="active" href="./">객관식</a>
+              <a href="./cards/">서술형 카드</a>
+            </nav>
+          </header>
+
+          <section class="controlbar" aria-label="Quiz controls">
+            <label>
+              <span>Chapter</span>
+              <select id="chapterSelect"></select>
+            </label>
+            <label>
+              <span>Order</span>
+              <select id="orderSelect">
+                <option value="ordered">순서대로</option>
+                <option value="random">무작위</option>
+                <option value="wrong-first">오답 우선</option>
+              </select>
+            </label>
+            <label>
+              <span>Type</span>
+              <select id="typeSelect">
+                <option value="all">전체 유형</option>
+                <option value="concept">개념형</option>
+                <option value="code">코드형</option>
+              </select>
+            </label>
+            <label class="search-control">
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="현재 챕터 검색" />
+            </label>
+            <div id="chapterProgress" class="chapter-progress"></div>
+          </section>
+
+          <div class="filterbar">
+            <div class="filter-tabs" role="group" aria-label="Question filter">
+              <button class="active" data-filter="all" type="button">전체</button>
+              <button data-filter="unanswered" type="button">미풀이</button>
+              <button data-filter="wrong" type="button">오답</button>
+              <button data-filter="starred" type="button">별표</button>
+            </div>
+          </div>
+
           <div class="index-heading">
             <div>
               <strong>문제 목록</strong>
@@ -75,6 +74,8 @@
           </div>
           <div id="topicList" class="topic-list"></div>
         </aside>
+
+        <button id="openIndexButton" class="mobile-index-button" type="button">문제 목록</button>
 
         <section id="quizStage" class="quiz-stage">
           <div id="emptyState" class="empty-state" hidden>
