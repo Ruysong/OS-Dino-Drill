@@ -1,3 +1,5 @@
+import { createTtsController } from "./tts.js";
+
 const STORAGE_KEY = "os-dino-drill-quiz-v1";
 const SYMBOLS = ["①", "②", "③", "④"];
 
@@ -52,6 +54,11 @@ const elements = Object.fromEntries(
   ].map((id) => [id, document.querySelector(`#${id}`)]),
 );
 
+const ttsController = createTtsController({
+  getCurrentQuestion: currentQuestion,
+  getOrderedChoices: orderedChoices,
+});
+
 initialize();
 
 async function initialize() {
@@ -66,6 +73,7 @@ async function initialize() {
         : state.chapters[0]?.id || "";
     state.questionId =
       state.progress.lastByChapter[state.chapterId] || currentChapter()?.questions[0]?.id || "";
+    ttsController.initialize();
     bindEvents();
     render();
   } catch (error) {
@@ -85,6 +93,7 @@ function bindEvents() {
     resetQuestionView();
     persistLocation();
     render();
+    ttsController.handleQuestionChange();
   });
   elements.orderSelect.addEventListener("change", (event) => {
     state.order = event.target.value;
@@ -330,12 +339,14 @@ function selectQuestion(questionId) {
   persistLocation();
   render();
   toggleIndex(false);
+  ttsController.handleQuestionChange();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function resetQuestionView() {
   state.selectedChoiceId = "";
   state.submitted = false;
+  ttsController.stop();
 }
 
 function toggleStar() {
@@ -373,7 +384,7 @@ function handleKeyboard(event) {
   if (
     handledKeys.includes(event.key) ||
     /^[1-4]$/.test(event.key) ||
-    ["o", "s"].includes(event.key.toLowerCase())
+    ["o", "r", "s"].includes(event.key.toLowerCase())
   ) {
     event.preventDefault();
     event.stopPropagation();
@@ -401,6 +412,10 @@ function handleKeyboard(event) {
   }
   if (event.key.toLowerCase() === "o") {
     if (state.submitted) elements.otherExplanationsDetails.open = !elements.otherExplanationsDetails.open;
+    return;
+  }
+  if (event.key.toLowerCase() === "r") {
+    ttsController.handleKeyboard(event);
     return;
   }
   if (event.key.toLowerCase() === "s") toggleStar();
