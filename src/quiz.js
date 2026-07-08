@@ -5,6 +5,7 @@ const SYMBOLS = ["①", "②", "③", "④"];
 
 const state = {
   chapters: [],
+  concepts: [],
   chapterId: "",
   questionId: "",
   selectedChoiceId: "",
@@ -30,6 +31,12 @@ const elements = Object.fromEntries(
     "closeIndexButton",
     "indexBackdrop",
     "quizStage",
+    "conceptButton",
+    "conceptModal",
+    "conceptModalTitle",
+    "conceptModalSubtitle",
+    "conceptModalBody",
+    "conceptCloseButton",
     "emptyState",
     "questionView",
     "questionPosition",
@@ -63,10 +70,15 @@ initialize();
 
 async function initialize() {
   try {
-    const response = await fetch("./data/quiz.json");
-    if (!response.ok) throw new Error(`Quiz data could not be loaded (${response.status}).`);
-    const data = await response.json();
+    const [quizResponse, conceptsResponse] = await Promise.all([
+      fetch("./data/quiz.json"),
+      fetch("./data/concepts.json"),
+    ]);
+    if (!quizResponse.ok) throw new Error(`Quiz data could not be loaded (${quizResponse.status}).`);
+    const data = await quizResponse.json();
+    const conceptsData = conceptsResponse.ok ? await conceptsResponse.json() : { notes: [] };
     state.chapters = data.chapters || [];
+    state.concepts = conceptsData.notes || [];
     state.chapterId =
       state.progress.lastChapterId && state.chapters.some((chapter) => chapter.id === state.progress.lastChapterId)
         ? state.progress.lastChapterId
@@ -127,6 +139,11 @@ function bindEvents() {
   elements.submitButton.addEventListener("click", submitAnswer);
   elements.previousButton.addEventListener("click", () => moveQuestion(-1));
   elements.nextButton.addEventListener("click", () => moveQuestion(1));
+  elements.conceptButton.addEventListener("click", openConceptNote);
+  elements.conceptCloseButton.addEventListener("click", closeConceptNote);
+  elements.conceptModal.addEventListener("click", (event) => {
+    if (event.target === elements.conceptModal) closeConceptNote();
+  });
   elements.openIndexButton.addEventListener("click", () => toggleIndex(true));
   elements.closeIndexButton.addEventListener("click", () => toggleIndex(false));
   elements.indexBackdrop.addEventListener("click", () => toggleIndex(false));
@@ -225,12 +242,15 @@ function renderQuestion() {
   const positionLabel = questionIndex >= 0 ? `${questionIndex + 1}/${questions.length}` : "풀이 완료";
   const progress = questionProgress(question.id);
   const shuffled = orderedChoices(question);
+  const concept = currentConceptNote();
 
   elements.questionPosition.textContent =
     `Chapter ${currentChapter().number} · ${question.number} · ${positionLabel}`;
   elements.questionType.textContent = question.type === "code" ? "CODE" : "CONCEPT";
   elements.questionType.dataset.type = question.type;
   elements.difficultyBadge.textContent = question.difficulty ? "★".repeat(question.difficulty) : "";
+  elements.conceptButton.disabled = !concept;
+  elements.conceptButton.textContent = concept ? "Concept" : "Concept 준비중";
   elements.topicTitle.textContent = question.topic;
   elements.promptContent.innerHTML = renderMarkdown(question.prompt);
   elements.starButton.textContent = progress.starred ? "★" : "☆";
@@ -379,6 +399,13 @@ function setTopicStatus(status) {
 function handleKeyboard(event) {
   if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
   if (isTypingTarget(event.target)) return;
+  if (!elements.conceptModal.hidden) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeConceptNote();
+    }
+    return;
+  }
 
   const handledKeys = [" ", "Spacebar", "Enter", "ArrowLeft", "ArrowRight"];
   if (
@@ -408,6 +435,11 @@ function handleKeyboard(event) {
   }
   if (event.key === "ArrowRight") {
     moveQuestion(1);
+    return;
+  }
+  if (event.key === "Escape") {
+    closeConceptNote();
+    toggleIndex(false);
     return;
   }
   if (event.key.toLowerCase() === "o") {
@@ -495,6 +527,10 @@ function currentQuestion() {
   return currentChapter()?.questions.find((question) => question.id === state.questionId);
 }
 
+function currentConceptNote() {
+  return state.concepts.find((note) => note.id === state.chapterId);
+}
+
 function questionProgress(questionId) {
   if (!state.progress.questions[questionId]) state.progress.questions[questionId] = {};
   return state.progress.questions[questionId];
@@ -553,6 +589,21 @@ function toggleIndex(open) {
   elements.indexBackdrop.classList.toggle("open", open);
 }
 
+function openConceptNote() {
+  const chapter = currentChapter();
+  const note = currentConceptNote();
+  if (!chapter || !note) return;
+  elements.conceptModalTitle.textContent = `Chapter ${chapter.number}. ${chapter.title}`;
+  elements.conceptModalSubtitle.textContent = "문제 풀다가 헷갈릴 때 바로 보는 개념 정리";
+  elements.conceptModalBody.innerHTML = renderConceptMarkdown(note.markdown);
+  elements.conceptModal.hidden = false;
+  elements.conceptModalBody.scrollTop = 0;
+}
+
+function closeConceptNote() {
+  if (elements.conceptModal) elements.conceptModal.hidden = true;
+}
+
 function renderMarkdown(markdown) {
   const source = cleanText(markdown);
   const codeBlocks = [];
@@ -574,6 +625,76 @@ function renderMarkdown(markdown) {
     html = html.replace(`@@CODE${index}@@`, block);
   });
   return html;
+}
+
+function renderConceptMarkdown(markdown) {
+  const source = cleanText(markdown);
+  const codeBlocks = [];
+  const tableBlocks = [];
+  let html = source.replace(/```([^\n]*)\n([\s\S]*?)```/g, (_, language, code) => {
+    const token = `@@CODE${codeBlocks.length}@@`;
+    codeBlocks.push(
+      `<pre><div class="code-label">${escapeHtml(language.trim() || "code")}</div><code>${escapeHtml(code.trimEnd())}</code></pre>`,
+    );
+    return token;
+  });
+
+  html = html.replace(/((?:^\|.+\|\s*$\n?){2,})/gm, (table) => {
+    const token = `@@TABLE${tableBlocks.length}@@`;
+    tableBlocks.push(renderMarkdownTable(table));
+    return token;
+  });
+
+  html = html
+    .split(/\n{2,}/)
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      if (/^@@(?:CODE|TABLE)\d+@@$/.test(trimmed)) return trimmed;
+      if (/^#{2,4}\s+/.test(trimmed)) {
+        const level = Math.min(4, trimmed.match(/^#+/)[0].length);
+        return `<h${level}>${renderInlineMarkdown(trimmed.replace(/^#{2,4}\s+/, ""))}</h${level}>`;
+      }
+      if (/^(?:[-*]\s+.+\n?)+$/.test(trimmed)) {
+        return `<ul>${trimmed
+          .split("\n")
+          .map((item) => `<li>${renderInlineMarkdown(item.replace(/^[-*]\s+/, ""))}</li>`)
+          .join("")}</ul>`;
+      }
+      return `<p>${renderInlineMarkdown(trimmed).replace(/\n/g, "<br>")}</p>`;
+    })
+    .join("");
+
+  codeBlocks.forEach((block, index) => {
+    html = html.replace(`@@CODE${index}@@`, block);
+  });
+  tableBlocks.forEach((block, index) => {
+    html = html.replace(`@@TABLE${index}@@`, block);
+  });
+  return html;
+}
+
+function renderMarkdownTable(table) {
+  const rows = table
+    .trim()
+    .split("\n")
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^\||\|$/g, "")
+        .split("|")
+        .map((cell) => cell.trim()),
+    );
+  const header = rows[0] || [];
+  const body = rows.slice(2);
+  return `<div class="concept-table-wrap"><table class="concept-table"><thead><tr>${header
+    .map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`)
+    .join("")}</tr></thead><tbody>${body
+    .map(
+      (row) =>
+        `<tr>${row.map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`,
+    )
+    .join("")}</tbody></table></div>`;
 }
 
 function renderInlineMarkdown(value) {

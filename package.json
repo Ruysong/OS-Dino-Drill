@@ -6,6 +6,7 @@
   "scripts": {
     "build:data": "node scripts/build-data.js",
     "build:quiz": "node scripts/build-quiz-data.js",
+    "build:concepts": "node scripts/build-concept-data.js",
     "serve": "npx serve ."
   },
   "keywords": [
